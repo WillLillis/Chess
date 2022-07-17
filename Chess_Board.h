@@ -937,6 +937,7 @@ private:
 		}
 
 		// huge mess, this is where most/ all of the bugs are
+		// en-passant move is allowed, but piece is not captured
 		switch (src_piece) {
 		case Chess_Piece_Type::Pawn:
 			// just moving forward, non capture
@@ -1016,26 +1017,24 @@ private:
 				{
 					return true;
 				}
-				// otherwise maybe it's an "En passant"
+				// otherwise maybe it's an "en passant"
 				else if (!dest_square.is_occupied())// destination square must be empty
 				{
 					// a pawn of the opposite side must be in the spot directly behind the destination square of the moved pawn
 					if (get_board_square_info(dest_row - get_pawn_dir(curr_turn), dest_col).get_square_piece() == Chess_Piece_Type::Pawn) // is a pawn
 					{
 						if (Chess_Piece::opposite_sides(get_board_square_info(dest_row - get_pawn_dir(curr_turn), dest_col).get_square_side(), curr_turn)) // pawn is on opposite side
-						{
-							if (!get_board_square_info(dest_row + get_pawn_dir(curr_turn), dest_col).is_occupied()) // and the square the pawn would have moved from must be empty
+						{ 
+							// finally, make sure that the pawn being captured moved to that spot just last turn
+							std::array<Board_Square, 64> last_state = get_past_game_state(2); // grab the board state from 1 move back
+							bool is_pawn = last_state[row_and_col_to_index(dest_row + get_pawn_dir(curr_turn), dest_col)].get_square_piece() == Chess_Piece_Type::Pawn; // there was a pawn just moved out of its starting square
+							bool pawn_moved = last_state[row_and_col_to_index(dest_row + get_pawn_dir(curr_turn), dest_col)].get_piece_moved(); // and it hadn't been moved before
+							if (is_pawn && !pawn_moved)
 							{
-								std::array<Board_Square, 64> last_state = get_past_game_state(1); // grab the board state from 1 move back
-								bool is_pawn = last_state[row_and_col_to_index(dest_row + (curr_turn == Chess_Side::White ? white_pawn_dir : black_pawn_dir), dest_col)].get_square_piece() == Chess_Piece_Type::Pawn; // there was a pawn just moved out of its starting square
-								bool pawn_moved = last_state[row_and_col_to_index(dest_row + (curr_turn == Chess_Side::White ? white_pawn_dir : black_pawn_dir), dest_col)].get_piece_moved(); // and it hadn't been moved before
-								if (is_pawn && !pawn_moved)
-								{
-									// need to indicate which pawn to capture
-									*capt_row = dest_row - get_pawn_dir(curr_turn); 
-									*capt_col = dest_col;
-									return true;
-								}
+								// need to indicate which pawn to capture
+								*capt_row = dest_row - get_pawn_dir(curr_turn); 
+								*capt_col = dest_col;
+								return true;
 							}
 						}
 					}
