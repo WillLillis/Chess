@@ -9,7 +9,7 @@
 
 /* 
 *
-* Going to draw the board out as an array once here for easy reference later
+* The board is represented internally with the following rows and cols
 * 
 *      1  2  3  4  5  6  7  8
 * 1 |  0  1  2  3  4  5  6  7 | 1
@@ -22,7 +22,18 @@
 * 8 | 56 57 58 59 60 61 62 63 | 8
 *      1  2  3  4  5  6  7  8
 * 
-* Externally represented to user as rows 1-8, cols 1-8
+* Rows and Columns are externally represented to user as shown below
+* 
+*      A  B  C  D  E  F  G  H
+* 8 |  0  1  2  3  4  5  6  7 | 8
+* 7 |  8  9 10 11 12 13 14 15 | 7
+* 6 | 16 17 18 19 20 21 22 23 | 6
+* 5 | 24 25 26 27 28 29 30 31 | 5
+* 4 | 32 33 34 35 36 37 38 39 | 4
+* 3 | 40 41 42 43 44 45 46 47 | 3
+* 2 | 48 49 50 51 52 53 54 55 | 2
+* 1 | 56 57 58 59 60 61 62 63 | 1
+*      A  B  C  D  E  F  G  H
 * 
 */
 
@@ -37,6 +48,7 @@ public:
 	const int8_t white_pawn_dir = -1; // a white pawn moving in the legal direction decreases its row number
 	const int8_t black_pawn_dir = 1; // a black pawn moving in the legal direction increases its row number
 
+	// point values for when a piece is captured
 	const uint8_t pawn_pts = 1;
 	const uint8_t rook_pts = 5;
 	const uint8_t knight_pts = 3;
@@ -107,7 +119,6 @@ public:
 	//{
 	//	// to be implemented...
 	//}
-	// assumes that the board is already set up
 	std::string get_player_name(Chess_Side player)
 	{
 		assert(player != Chess_Side::EMPTY);
@@ -134,7 +145,6 @@ public:
 
 		src_row = src_col = dest_row = dest_col = capt_row = capt_col = 0; // making this assignment to quiet down VS's warnings about uninitialized memory
 
-		// move all of the user move stuff inside of a function?
 		while (true) // loop will spin until a user decides to resign
 		{
 			draw_Board(true); // display the current board
@@ -273,7 +283,6 @@ public:
 			//system("cls"); // not sure if we'll want this for debugging, stylistically later tho 
 		}
 	}
-	// returns the number of moves completed so far
 	uint8_t get_piece_val(Chess_Piece_Type in_piece)
 	{
 		switch (in_piece)
@@ -303,6 +312,7 @@ public:
 		// casting size_t down to uint8_t shouldn't matter as "The longest possible chess game is 8848.5 moves long" (https://wismuth.com/chess/longest-game.html#:~:text=Abstract,34082%20according%20to%20a%20calculation.)
 		return (uint8_t)game_hist.size() - (uint8_t)1; // minus 1 as the board's initial state is the first entry in that vector
 	}
+	// simply returns the board_square class instance at the specified location
 	Board_Square get_board_square_info(uint8_t row, uint8_t col)
 	{
 		assert(row >= 1 && row <= 8);
@@ -332,7 +342,7 @@ public:
 		std::array<Board_Square, 64> prev_game_state;
 
 		assert(num_moves_back > 0);
-		assert(!game_hist.empty()); // should never be empty, as first entry is placed in within constructor
+		assert(!game_hist.empty()); // should never be empty, as first entry is placed within constructor
 		if (game_hist.size() < num_moves_back) // replace this with an assert?
 		{
 			// create an empty board...
@@ -346,8 +356,8 @@ public:
 			
 			return prev_game_state; // and return it
 		}
-
-		return game_hist[game_hist.size() - num_moves_back];
+		
+		return game_hist[game_hist.size() - num_moves_back]; // otherwise return the desired state
 	}
 	Chess_Side get_opposite_side(Chess_Side curr_side)
 	{
@@ -388,22 +398,19 @@ public:
 		uint8_t dumby_capt_col;
 
 		return is_threatening(get_opposite_side(player), king_row, king_col);
-		
-		return false;
 	}
-	// - checks if the piece in src_row, src_col can be legally moved to dest_row, dest_col
-	// - if the move is legal, then the function returns true
-	// - if anything goes wrong/ is against the rules, it simply returns false 
-	// the work of actually moving the pieces will have to be done by the caller if desired
-	// this should be relatively straightforward, except in the case of castling
-		// if a valid castling move is made (king is moved 2 squares towards a rook), then the castling
-		// flag passed in by reference will be set to true, indicating to the caller that another "move"
-		// needs to be taken from the user. This move can only be the movement of the rook to other side of the 
-		// bishop, so any other move will be rejected
-	// capt_row and capt_col params passed in by reference are set to 0 unless an en-passant takes place, in which case
-	// they indicate the row and column of the piece captured in that move
-	// the prom_out flag will be set to true if a pawn is to be promoted, set to false otherwise
-		// in the case of a pawn promotion the user will need to be prompted regarding what piece to promote their pawn to
+	// function called when a user attempts to input a move
+	// completes some basic checks, including seeing whether or not the move places the player in check (aka is illegal)
+	// after that, the work is handed off to simple_move_check(), which simply tells whether or not a piece could be moved from the src square to the dest square
+	// the capt_row var is used to indicate to the caller when a piece is captured that is in a different location than the dest square (only happens with an "en-passant" move)
+		// as the name suggests, in such cases the value it points to is the captured piece's row
+		// if the locations aren't different, the value is set to 0
+	// the capt_col var is used to indicate to the caller when a piece is captured that is in a different location than the dest square (only happens with an "en-passant" move)
+	// // as the name suggests, in such cases the value it points to is the captured piece's column
+		// if the locations aren't different, the value is set to 0
+	// the castling_out flag is used to indicate to the caller whether a castling maneuver was sucessfully initiated
+	// the prom_out flag is used to indicate to the caller whether a pawn promotion is in order
+	// the castling_in flag is used to indicate to the function whether the second "leg" of a castling maneuver is required
 	bool check_move(uint8_t src_row, uint8_t src_col, uint8_t dest_row, uint8_t dest_col, uint8_t* capt_row, uint8_t* capt_col, bool* castling_out, bool* prom_out, bool castling_in = false)
 	{
 		assert(capt_row != NULL);
@@ -461,8 +468,6 @@ public:
 		{
 			return false;
 		}
-
-		// overhaul this once we have simple_move_check() working
 		// make sure move doesn't place player into check
 		move_piece(false, src_row, src_col, dest_row, dest_col); // as long as the move is in bounds we can try it out
 		if (is_in_check(get_curr_turn())) // illegal to place yourself in check
@@ -475,7 +480,7 @@ public:
 			}
 			return false; // return back to the call either way that the move isn't allowed
 		}
-		else // otherwise we're fine to undo that initial move and check if it was actually legal to make
+		else // otherwise we're fine to undo that virtual move and check if it was actually legal to make
 		{
 			move_piece(false, dest_row, dest_col, src_row, src_col); // place the moved piece back in the src square
 			if (get_board_square_info(dest_row, dest_col).is_occupied()) // if there was a piece in that square, put it back
@@ -490,15 +495,15 @@ public:
 	}
 
 private:
-	std::array<Board_Square, 64> board;
-	Chess_Side curr_turn;
-	std::vector<std::array<Board_Square, 64>> game_hist; 
-	uint8_t white_score;
-	uint8_t black_score;
-	bool white_check;
-	bool black_check;
-	std::string p1_name;
-	std::string p2_name;
+	std::array<Board_Square, 64> board; // board array containing the actual pieces, their locations, etc.
+	Chess_Side curr_turn; // which player's turn it is
+	std::vector<std::array<Board_Square, 64>> game_hist; // array of board arrays, keeps track of the game history
+	uint8_t white_score; // player scores...
+	uint8_t black_score; // ^
+	bool white_check; // indicates whether a player is in check...
+	bool black_check; // ^
+	std::string p1_name; // player names (requesting them to be implemented)
+	std::string p2_name; // 
 	/*
 	* Whole lotta definitions for the drawing functions...
 	*/
@@ -838,9 +843,7 @@ private:
 		" |__|  |__| ",
 		"            "
 	};
-
-
-
+	// creates an instance of the Board_Square class based off of the input parameters and places it in the specified square in the board array
 	void set_board_square(Chess_Side in_board_color, Chess_Side in_piece_color, Chess_Piece_Type in_piece_type, bool prev_move, uint8_t row, uint8_t col)
 	{
 		// should we call a destructor here for the previous instance of the Board_Square?-> is that needed since we're using smart pointers?
@@ -862,14 +865,17 @@ private:
 		// then set the source square to be empty
 		set_board_square(black_white_helper(src_row, src_col), Chess_Side::EMPTY, Chess_Piece_Type::EMPTY, false, src_row, src_col);
 	}
+	// creates a piece and places it in the specified square
 	void insert_piece(uint8_t dest_row, uint8_t dest_col, Chess_Side in_piece_color, Chess_Piece_Type in_piece_type, bool prev_move)
 	{
 		set_board_square(black_white_helper(dest_row, dest_col), in_piece_color, in_piece_type, prev_move, dest_row, dest_col);
 	}
+	// removes a piece from the specified square by placing an empty piece in its place
 	void clear_piece(uint8_t row, uint8_t col)
 	{
 		insert_piece(row, col, Chess_Side::EMPTY, Chess_Piece_Type::EMPTY, false);
 	}
+	// translates the internal row and col index to the actual index in the board array
 	uint8_t row_and_col_to_index(uint8_t row, uint8_t col)
 	{
 		assert(row >= 1 && row <= 8);
@@ -877,6 +883,8 @@ private:
 
 		return ((row - 1) * num_cols) + (col - 1);
 	}
+	// gives a signed indication of the correct direction for a pawn to move depending on its side
+		// (in the internal row representation)
 	int8_t get_pawn_dir(Chess_Side curr_side)
 	{
 		assert(curr_side != Chess_Side::EMPTY);
@@ -906,13 +914,9 @@ private:
 	}
 	// just checks if the piece at src_row, src_col COULD move to dest_row, dest_col
 	// used to see if a piece is threatening the king
-	// does not take castling or en-passant into consideration
-		// very similar to check_move function, but without the recursion I had in my initial thing
-		// is there a way we can combine them? lot of redundant code
-	// with it implemented this way, we could just see if the attacking piece could reach the king's destination square,
-		// without actually moving the king 
 	bool simple_move_check(Chess_Side curr_turn, uint8_t src_row, uint8_t src_col, uint8_t dest_row, uint8_t dest_col, uint8_t* capt_row, uint8_t* capt_col, bool* castling_out, bool* prom_out, bool castling_in = false)
 	{
+		// calculate some useful values first...
 		int8_t up_down = dest_row - src_row; // positive means moving down, negative means moving up (unfortunate internal row order convention I don't feel like changing now)
 		int8_t left_right = dest_col - src_col; // positive means moving right, negative means moving left
 		uint8_t delta = std::abs(up_down) > std::abs(left_right) ? std::abs(up_down) : std::abs(left_right); // max displacement out of both directions
@@ -925,12 +929,13 @@ private:
 		Board_Square dest_square = get_board_square_info(dest_row, dest_col);
 		Chess_Piece_Type src_piece = src_square.get_square_piece();
 		
-		// still want this in here 
+		// still want this in here, even though it's checked within the check_move function
 		if (src_square.get_square_side() != curr_turn)
 		{
 			return false;
 		}
 
+		// huge mess, this is where most/ all of the bugs are
 		switch (src_piece) {
 		case Chess_Piece_Type::Pawn:
 			// just moving forward, non capture
@@ -1276,7 +1281,8 @@ private:
 		}
 
 	}
-	void enact_move(Chess_Side player, uint8_t src_row, uint8_t src_col, uint8_t dest_row, uint8_t dest_col, uint8_t capt_row, uint8_t capt_col)
+	// once a move is deemed legal, this actually completes the move on the board, and adds the necessary points to the appropriate player's score if a piece is captured
+	void enact_move(Chess_Side player, uint8_t src_row, uint8_t src_col, uint8_t dest_row, uint8_t dest_col, uint8_t capt_row = 0, uint8_t capt_col = 0)
 	{
 		// if a piece is being captured, we add it's value to the player's score
 		// going to assume all the necessary checking was done before hand and that the piece is on the opposite side
@@ -1298,8 +1304,10 @@ private:
 	}
 	void flip_curr_turn()
 	{
+		assert(get_curr_turn() != Chess_Side::EMPTY);
 		set_curr_turn(get_curr_turn() == Chess_Side::White ? Chess_Side::Black : Chess_Side::White);
 	}
+	// wipes out the specified player's score total
 	void clear_player_score(Chess_Side player)
 	{
 		assert(player != Chess_Side::EMPTY);
@@ -1314,6 +1322,7 @@ private:
 			return;
 		}
 	}
+	// adds the specified amount to the specified player's score
 	void modify_player_score(Chess_Side player, uint8_t delta_score)
 	{
 		assert(player != Chess_Side::EMPTY);
@@ -1340,10 +1349,10 @@ private:
 			black_check = check_val;
 		}
 	}
+	// sees if a player is in check, and updates their check variable accordingly
 	void update_player_check(Chess_Side player)
 	{
 		assert(player != Chess_Side::EMPTY);
-		printf("Calling is_in_check 3\n");
 		set_player_check(player, is_in_check(player));
 	}
 	// adds the current board state to the end of the game_hist vector
@@ -1393,8 +1402,9 @@ private:
 		{
 			return input - '0';
 		}
-		return input; // otherwise, garbage in-> garbage out
+		return input; // otherwise, garbage in->garbage out
 	}
+	// translation that's necessary because I'm an idiot
 	uint8_t external_to_internal_row(uint8_t row)
 	{
 		switch (row) {
@@ -1451,7 +1461,7 @@ private:
 	// stolen from nullbyte's tic-tac-toe code
 	bool is_number(std::string input)
 	{
-		for (char c : input) 
+		for (char c : input) // fancy C++ iterator
 		{
 			if (!std::isdigit(c))
 			{
@@ -1460,6 +1470,7 @@ private:
 		}
 		return true;
 	}
+	// returns whether the specified square should be black or white
 	Chess_Side black_white_helper(uint8_t row, uint8_t col)
 	{
 		assert(row >= 1 && row <= 8);
@@ -1489,14 +1500,17 @@ private:
 		// if somehow none of those cases hit we'll return this as garbage
 		return Chess_Side::EMPTY;
 	}
+	// just a get function for the number of printf lines we use when "drawing" things
 	uint8_t get_num_layers() const
 	{
 		return num_layers;
 	}
+	// just a get function for the number of width of our big chars when "drawing" things
 	uint8_t get_draw_width() const
 	{
 		return draw_width;
 	}
+	// for drawing functions
 	std::string get_piece_layer(Chess_Piece_Type piece, Chess_Side side, uint8_t layer)
 	{
 		assert(layer >= 0 && layer <= 8);
@@ -1559,7 +1573,7 @@ private:
 		}
 	}
 	// draws a scoreboard, purely for use within the draw_Board() function
-	// can be improved later once I feel like bringing in the big chars project
+	// can be improved later once/ if I feel like bringing in the big chars project
 	void draw_ScoreBoard()
 	{
 		printf("%s: %hhu\n", get_player_name(Chess_Side::White).c_str(), get_player_score(Chess_Side::White));
@@ -1600,6 +1614,7 @@ private:
 			break;
 		}
 	}
+	// draws the A-H column labels lined up with the board's squares
 	void draw_column_labels(bool draw_labels)
 	{
 		for (uint8_t layer = 0; layer < get_num_layers(); layer++) // for each layer...
@@ -1650,6 +1665,8 @@ private:
 			break;
 		}
 	}
+	// draws a specified row of the board
+	// draw_labels indicates whether to print the labels (1-8) at the beginning of each row
 	void draw_Row(uint8_t row, bool draw_labels)
 	{
 		Chess_Piece_Type temp_piece;
@@ -1682,6 +1699,8 @@ private:
 			printf("\n");
 		}
 	}
+	// draws the chess board in its current state
+	// draw_labels indicates whether or not to print row and column labels
 	void draw_Board(bool draw_labels)
 	{
 		draw_ScoreBoard();
