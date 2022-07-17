@@ -22,7 +22,7 @@
 * 8 | 56 57 58 59 60 61 62 63 | 8
 *      1  2  3  4  5  6  7  8
 * 
-* Rows and Columns are externally represented to user as shown below
+* Rows and Columns are externally represented to user in the typical chess fashion, as shown below
 * 
 *      A  B  C  D  E  F  G  H
 * 8 |  0  1  2  3  4  5  6  7 | 8
@@ -42,11 +42,11 @@ public:
 	const uint8_t num_rows = 8;
 	const uint8_t num_cols = 8;
 
-	const uint8_t white_prom_row = 1; // row # that a white pawn must advance to in order to gain a "promotion"
-	const uint8_t black_prom_row = 8; // row # that a black pawn must advance to in order to gain a "promotion"
+	const uint8_t white_prom_row = 1; // row # that a white pawn must advance to in order to gain a "promotion" (internal representation)
+	const uint8_t black_prom_row = 8; // row # that a black pawn must advance to in order to gain a "promotion" (internal representation)
 
-	const int8_t white_pawn_dir = -1; // a white pawn moving in the legal direction decreases its row number
-	const int8_t black_pawn_dir = 1; // a black pawn moving in the legal direction increases its row number
+	const int8_t white_pawn_dir = -1; // a white pawn moving in the legal direction decreases its row number (internal representation)
+	const int8_t black_pawn_dir = 1; // a black pawn moving in the legal direction increases its row number (internal representation)
 
 	// point values for when a piece is captured
 	const uint8_t pawn_pts = 1;
@@ -384,18 +384,13 @@ public:
 				{
 					king_row = curr_row;
 					king_col = curr_col;
-					goto Loop_Exit; // in lieu of a double break...
+					goto King_Loop_Exit; // in lieu of a double break...
 				}
 			}
 		}
-	Loop_Exit:
+	King_Loop_Exit:
 
 		assert(king_row != 0 && king_col != 0); // if we can't find the king we're in trouble...
-
-		bool dumby_castle_flag;
-		bool dumby_prom_flag;
-		uint8_t dumby_capt_row;
-		uint8_t dumby_capt_col;
 
 		return is_threatening(get_opposite_side(player), king_row, king_col);
 	}
@@ -468,25 +463,30 @@ public:
 		{
 			return false;
 		}
+
+		// save the dest square's contents so we can restore it after the checks below
+		Board_Square dest_square = get_board_square_info(dest_row, dest_col);
+
 		// make sure move doesn't place player into check
 		move_piece(false, src_row, src_col, dest_row, dest_col); // as long as the move is in bounds we can try it out
 		if (is_in_check(get_curr_turn())) // illegal to place yourself in check
 		{
 			move_piece(false, dest_row, dest_col, src_row, src_col); // place the moved piece back in the src square
-			if (get_board_square_info(dest_row, dest_col).is_occupied()) // if there was a piece in the dest square, put it back
+			if (dest_square.is_occupied()) // if there was a piece in the dest square, put it back
 			{
-				insert_piece(dest_row, dest_col, get_board_square_info(dest_row, dest_col).get_square_side(), 
-					get_board_square_info(dest_row, dest_col).get_square_piece(), get_board_square_info(dest_row, dest_col).get_piece_moved());
+				insert_piece(dest_row, dest_col, dest_square.get_square_side(),
+					dest_square.get_square_piece(), dest_square.get_piece_moved());
 			}
 			return false; // return back to the call either way that the move isn't allowed
 		}
 		else // otherwise we're fine to undo that virtual move and check if it was actually legal to make
 		{
+			// issue with wiping out contents of board with check?
 			move_piece(false, dest_row, dest_col, src_row, src_col); // place the moved piece back in the src square
-			if (get_board_square_info(dest_row, dest_col).is_occupied()) // if there was a piece in that square, put it back
+			if (dest_square.is_occupied()) // if there was a piece in that square, put it back
 			{
-				insert_piece(dest_row, dest_col, get_board_square_info(dest_row, dest_col).get_square_side(), 
-					get_board_square_info(dest_row, dest_col).get_square_piece(), get_board_square_info(dest_row, dest_col).get_piece_moved());
+				insert_piece(dest_row, dest_col, dest_square.get_square_side(),
+					dest_square.get_square_piece(), dest_square.get_piece_moved());
 			}
 		}
 
@@ -1036,7 +1036,19 @@ private:
 								*capt_col = dest_col;
 								return true;
 							}
+							else
+							{
+								return false;
+							}
 						}
+						else
+						{
+							return false;
+						}
+					}
+					else
+					{
+						return false;
 					}
 				}
 				else
@@ -1290,7 +1302,7 @@ private:
 		{
 			modify_player_score(player, get_piece_val(get_board_square_info(dest_row, dest_col).get_square_piece()));
 		}
-		else if (capt_row != 0) // an en-passant took place
+		else if (capt_row != 0) // an en-passant took place, could also test for capt_col != 0
 		{
 			modify_player_score(player, get_piece_val(get_board_square_info(capt_row, capt_col).get_square_piece()));
 			clear_piece(capt_row, capt_col);
@@ -1305,7 +1317,7 @@ private:
 	void flip_curr_turn()
 	{
 		assert(get_curr_turn() != Chess_Side::EMPTY);
-		set_curr_turn(get_curr_turn() == Chess_Side::White ? Chess_Side::Black : Chess_Side::White);
+		set_curr_turn(get_opposite_side(get_curr_turn()));
 	}
 	// wipes out the specified player's score total
 	void clear_player_score(Chess_Side player)
@@ -1457,18 +1469,6 @@ private:
 			return true;
 		}
 		return false;
-	}
-	// stolen from nullbyte's tic-tac-toe code
-	bool is_number(std::string input)
-	{
-		for (char c : input) // fancy C++ iterator
-		{
-			if (!std::isdigit(c))
-			{
-				return false;
-			}
-		}
-		return true;
 	}
 	// returns whether the specified square should be black or white
 	Chess_Side black_white_helper(uint8_t row, uint8_t col)
@@ -1666,7 +1666,7 @@ private:
 		}
 	}
 	// draws a specified row of the board
-	// draw_labels indicates whether to print the labels (1-8) at the beginning of each row
+	// 'draw_labels' indicates whether to print the labels (1-8) at the beginning of each row
 	void draw_Row(uint8_t row, bool draw_labels)
 	{
 		Chess_Piece_Type temp_piece;
