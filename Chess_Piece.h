@@ -30,21 +30,13 @@ public:
 	Chess_Piece(Chess_Piece_Type in_piece, Chess_Side in_side, bool in_moved) : piece(in_piece), side(in_side), moved(in_moved)
 	{
 	}
-	Chess_Piece_Type get_piece_type()
+	Chess_Piece_Type get_piece_type() const
 	{
 		return piece;
-	}
-	void set_piece_type(Chess_Piece_Type new_piece_type) 
-	{
-		piece = new_piece_type;
 	}
 	Chess_Side get_piece_side()
 	{
 		return side;
-	}
-	void set_piece_side(Chess_Side new_side)
-	{
-		side = new_side;
 	}
 	bool has_moved() const
 	{
@@ -73,6 +65,15 @@ private:
 	Chess_Piece_Type piece;
 	Chess_Side side;
 	bool moved;
+
+	void set_piece_type(Chess_Piece_Type new_piece_type)
+	{
+		piece = new_piece_type;
+	}
+	void set_piece_side(Chess_Side new_side)
+	{
+		side = new_side;
+	}
 };
 
 

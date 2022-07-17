@@ -38,52 +38,8 @@ int main(void)
 
 	printf("Testing...\n");
 
-	//printf("Board test:\n");
-	//for (uint8_t row = 1; row <= 8; row++) // rows
-	//{
-	//	for (uint8_t layer = 0; layer <= 7; layer++) // layers 
-	//	{
-	//		for (uint8_t col = 1; col <= 8; col++) // cols
-	//		{
-	//			if (b_w_helper(row, col) == Chess_Side::White)
-	//			{
-	//				printf("\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB");
-	//			}
-	//			else
-	//			{
-	//				printf("             ");
-	//			}
-	//		}
-	//		if (layer != 7)
-	//		{
-	//			printf("\n");
-	//		}
-	//	}
-	//	printf("\n");
-	//}
-
 	Chess_Board test_board;
 	test_board.play_game();
-
-	//printf("Testing Labels:\n");
-
-	//printf("  __    __  "); // 0
-	//printf("\n");
-	//printf(" |  |  |  | "); // 1
-	//printf("\n");
-	//printf(" |  |__|  | "); // 2
-	//printf("\n");
-	//printf(" |        | "); // 3
-	//printf("\n");
-	//printf(" |   __   | "); // 4
-	//printf("\n");
-	//printf(" |  |  |  | "); // 5
-	//printf("\n");
-	//printf(" |__|  |__| "); // 6
-	//printf("\n");
-	//printf("            "); // 7
-	//printf("\n");
-
 
 	return 0;
 }

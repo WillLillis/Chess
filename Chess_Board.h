@@ -800,6 +800,7 @@ private:
 		"            "
 	};
 	// E
+	// Couldn't find a good way to get this to match the others' heights without it looking wonky
 	const std::string label_e[8] = {
 		"            ",
 		"   _______  ",
