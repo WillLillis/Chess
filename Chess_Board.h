@@ -22,7 +22,7 @@
 * 8 | 56 57 58 59 60 61 62 63 | 8
 *      1  2  3  4  5  6  7  8
 * 
-* Rows and Columns are externally represented to user in the typical chess fashion, as shown below
+* Rows and Columns are externally represented to user in the typical chess fashion(?), as shown below
 * 
 *      A  B  C  D  E  F  G  H
 * 8 |  0  1  2  3  4  5  6  7 | 8
@@ -115,10 +115,26 @@ public:
 		draw_Board(draw_labels);
 	}
 	// Parametrized constuctor, takes in a FEN string to set up the board in a specified state
-	//Chess_Board(std::string FEN_string)
-	//{
-	//	// to be implemented...
-	//}
+	Chess_Board(std::string FEN_string)
+	{
+		// to be implemented...
+		// Piece placement data
+			// fill in the board
+		// active color
+			// set the curr_turn
+		// castling availability
+			// has_moved data members for kings and rooks
+				// should take some thought in seeing which to set (none, one, both, etc.)
+		// en passant target square
+			// might have to add a "past" state to the game_hist vector here
+		// halfmove clock
+			// ?-> might want to change internal data members to reflect this "time keeping"
+		// fullmove number
+			// same as halfmove clock
+			
+		// with the now initialized board...
+		// calculate point values for each player based off of what isn't there for the other player
+	}
 	std::string get_player_name(Chess_Side player)
 	{
 		assert(player != Chess_Side::EMPTY);
@@ -142,8 +158,6 @@ public:
 		bool castling_flag, promotion_flag;
 
 		char src_row_choice, src_col_choice, dest_row_choice, dest_col_choice;
-
-		src_row = src_col = dest_row = dest_col = capt_row = capt_col = 0; // making this assignment to quiet down VS's warnings about uninitialized memory
 
 		while (true) // loop will spin until a user decides to resign
 		{
@@ -174,7 +188,7 @@ public:
 				std::cin.clear();
 				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 				src_row = char_to_num(src_row_choice);
-				src_row = external_to_internal_row(src_row); // translation we have to do because I'm an idiot
+				src_row = external_to_internal_row(src_row); // translation we have to do because I'm bad at planning ahead
 
 				printf("Enter the column of the square you would like to move to: ");
 				std::cin >> dest_col_choice;
@@ -283,7 +297,7 @@ public:
 			//system("cls"); // not sure if we'll want this for debugging, stylistically later tho 
 		}
 	}
-	uint8_t get_piece_val(Chess_Piece_Type in_piece)
+	uint8_t get_piece_val(Chess_Piece_Type in_piece) const
 	{
 		switch (in_piece)
 		{
@@ -309,11 +323,12 @@ public:
 	}
 	uint8_t get_num_moves()
 	{
+		// this needs to get changed
 		// casting size_t down to uint8_t shouldn't matter as "The longest possible chess game is 8848.5 moves long" (https://wismuth.com/chess/longest-game.html#:~:text=Abstract,34082%20according%20to%20a%20calculation.)
 		return (uint8_t)game_hist.size() - (uint8_t)1; // minus 1 as the board's initial state is the first entry in that vector
 	}
 	// simply returns the board_square class instance at the specified location
-	Board_Square get_board_square_info(uint8_t row, uint8_t col)
+	Board_Square get_board_square_info(uint8_t row, uint8_t col) const
 	{
 		assert(row >= 1 && row <= 8);
 		assert(col >= 1 && col <= 8);
@@ -324,7 +339,7 @@ public:
 	{
 		return curr_turn;
 	}
-	uint8_t get_player_score(Chess_Side player)
+	uint8_t get_player_score(Chess_Side player) const
 	{
 		assert(player != Chess_Side::EMPTY);
 		return player == Chess_Side::White ? white_score : black_score;
@@ -359,7 +374,7 @@ public:
 		
 		return game_hist[game_hist.size() - num_moves_back]; // otherwise return the desired state
 	}
-	Chess_Side get_opposite_side(Chess_Side curr_side)
+	static Chess_Side get_opposite_side(Chess_Side curr_side)
 	{
 		assert(curr_side != Chess_Side::EMPTY);
 		return curr_side == Chess_Side::White ? Chess_Side::Black : Chess_Side::White;
@@ -800,7 +815,7 @@ private:
 		"            "
 	};
 	// E
-	// Couldn't find a good way to get this to match the others' heights without it looking wonky
+	// Couldn't find a good way to get this to match the other letters' heights without it looking wonky
 	const std::string label_e[8] = {
 		"            ",
 		"   _______  ",
@@ -877,7 +892,7 @@ private:
 		insert_piece(row, col, Chess_Side::EMPTY, Chess_Piece_Type::EMPTY, false);
 	}
 	// translates the internal row and col index to the actual index in the board array
-	uint8_t row_and_col_to_index(uint8_t row, uint8_t col)
+	uint8_t row_and_col_to_index(uint8_t row, uint8_t col) const
 	{
 		assert(row >= 1 && row <= 8);
 		assert(col >= 1 && col <= 8);
@@ -924,7 +939,7 @@ private:
 		int8_t dir_up_down = up_down == 0 ? 0 : (up_down > 0 ? 1 : -1); // merely indicates direction (or lack-thereof)
 		int8_t dir_left_right = left_right == 0 ? 0 : (left_right > 0 ? 1 : -1); // ^
 
-		uint8_t castling_row = get_curr_turn() == Chess_Side::White ? 8 : 1; // if it's a castling move, this is the row in which it should take place
+		uint8_t castling_row = get_castling_row(curr_turn); // if it's a castling move, this is the row in which it should take place
 
 		Board_Square src_square = get_board_square_info(src_row, src_col);
 		Board_Square dest_square = get_board_square_info(dest_row, dest_col);
@@ -1373,7 +1388,7 @@ private:
 		game_hist.emplace_back(board);
 	}
 	// instead of a switch we could just go off of the ASCII char number but that seems a bit obfuscated
-	uint8_t lettered_col_translation(char col_in)
+	static uint8_t lettered_col_translation(char col_in)
 	{
 		col_in = toupper(col_in);
 
@@ -1408,7 +1423,7 @@ private:
 		}
 	}
 	// not going to do any error checking here, we'll let the col/ row checkers take care of bad input
-	uint8_t char_to_num(char input)
+	static uint8_t char_to_num(char input)
 	{
 		if (std::isdigit(input)) // if it's a number, translate it
 		{
@@ -1417,7 +1432,7 @@ private:
 		return input; // otherwise, garbage in->garbage out
 	}
 	// translation that's necessary because I'm an idiot
-	uint8_t external_to_internal_row(uint8_t row)
+	static uint8_t external_to_internal_row(uint8_t row)
 	{
 		switch (row) {
 		case 1:
@@ -1450,7 +1465,7 @@ private:
 		}
 	}
 	// redundant, but the name helps the code make more sense
-	uint8_t internal_to_external_row(uint8_t row)
+	static uint8_t internal_to_external_row(uint8_t row)
 	{
 		return external_to_internal_row(row); 
 	}
@@ -1470,8 +1485,14 @@ private:
 		}
 		return false;
 	}
+	// returns the row (internal representation) that the given player can castle in
+	static uint8_t get_castling_row(Chess_Side side)
+	{
+		assert(side != Chess_Side::EMPTY);
+		return side == Chess_Side::White ? 8 : 1;
+	}
 	// returns whether the specified square should be black or white
-	Chess_Side black_white_helper(uint8_t row, uint8_t col)
+	static Chess_Side black_white_helper(uint8_t row, uint8_t col)
 	{
 		assert(row >= 1 && row <= 8);
 		assert(col >= 1 && col <= 8);

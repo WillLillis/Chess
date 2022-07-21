@@ -34,9 +34,17 @@ public:
 	{
 		return piece;
 	}
-	Chess_Side get_piece_side()
+	void set_piece_type(Chess_Piece_Type new_piece_type)
+	{
+		piece = new_piece_type;
+	}
+	Chess_Side get_piece_side() const
 	{
 		return side;
+	}
+	void set_piece_side(Chess_Side new_side)
+	{
+		side = new_side;
 	}
 	bool has_moved() const
 	{
@@ -65,15 +73,6 @@ private:
 	Chess_Piece_Type piece;
 	Chess_Side side;
 	bool moved;
-
-	void set_piece_type(Chess_Piece_Type new_piece_type)
-	{
-		piece = new_piece_type;
-	}
-	void set_piece_side(Chess_Side new_side)
-	{
-		side = new_side;
-	}
 };
 
 
