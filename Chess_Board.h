@@ -82,7 +82,7 @@ public:
 		set_board_square(black_white_helper(1, 8), Chess_Side::Black, Chess_Piece_Type::Rook, false, 1, 8);
 
 		// Set up the the black pawns
-		for (uint8_t col = 1; col <= 8; col++)
+		for (uint8_t col = 1; col <= num_cols; col++)
 		{
 			set_board_square(black_white_helper(2, col), Chess_Side::Black, Chess_Piece_Type::Pawn, false, 2, col);
 		}
@@ -97,7 +97,7 @@ public:
 		}
 
 		// Set up the the white pawns
-		for (uint8_t col = 1; col <= 8; col++)
+		for (uint8_t col = 1; col <= num_cols; col++)
 		{
 			set_board_square(black_white_helper(7, col), Chess_Side::White, Chess_Piece_Type::Pawn, false, 7, col);
 		}
@@ -172,7 +172,7 @@ public:
 	****************************************************************************/
 	void test_draw(bool draw_labels) const
 	{
-		draw_Board(draw_labels);
+		draw_board(draw_labels);
 	}
 	/****************************************************************************
 	* get_player_name
@@ -238,7 +238,7 @@ public:
 
 		while (true) // loop will spin until a user decides to resign
 		{
-			draw_Board(true); // display the current board
+			draw_board(true); // display the current board
 
 			do
 			{
@@ -291,7 +291,7 @@ public:
 
 			while (castling_flag) // if the first move was a castling move...
 			{
-				draw_Board(true);
+				draw_board(true);
 
 				printf("%s, it is still your turn.\n", get_player_name(get_curr_turn()).c_str());
 				printf("You are in a castling manuever.\n");
@@ -539,24 +539,6 @@ public:
 		return game_hist[game_hist.size() - num_moves_back]; // otherwise return the desired state
 	}
 	/****************************************************************************
-	* get_opposite_side
-	*
-	* - Returns the opposite side of the one passed in
-	*
-	* Parameters :
-	* - curr_side : the reference side, of which we want the opposite of
-	*
-	* Returns :
-	* - Chess_Side : the opposite side of curr_side
-	*	- Chess_Side::Black if Chess_Side::White is passed in
-	*	- Chess_Side::White if Chess_Side::Black is passed in
-	****************************************************************************/
-	static Chess_Side get_opposite_side(Chess_Side curr_side)
-	{
-		assert(curr_side != Chess_Side::EMPTY);
-		return curr_side == Chess_Side::White ? Chess_Side::Black : Chess_Side::White;
-	}
-	/****************************************************************************
 	* is_in_check
 	*
 	* - Returns whether the specified side is currently in check
@@ -593,7 +575,7 @@ public:
 
 		assert(king_row != 0 && king_col != 0); // if we can't find the king we're in trouble...
 
-		return is_threatening(get_opposite_side(player), king_row, king_col);
+		return is_threatening(Chess_Piece::get_opposite_side(player), king_row, king_col);
 	}
 	/****************************************************************************
 	* check_move
@@ -1238,7 +1220,7 @@ private:
 		{
 			for (uint8_t curr_col = 1; curr_col <= num_cols; curr_col++)
 			{
-				if (Chess_Piece::opposite_sides(get_opposite_side(attacking_side), get_board_square_info(curr_row, curr_col).get_square_side()))
+				if (Chess_Piece::opposite_sides(Chess_Piece::get_opposite_side(attacking_side), get_board_square_info(curr_row, curr_col).get_square_side()))
 				{
 					if (simple_move_check(attacking_side, curr_row, curr_col, target_row, target_col, &dumby_capt_row, &dumby_capt_col, &dumby_castle_flag, &dumby_prom_flag, false))
 					{
@@ -1621,7 +1603,7 @@ private:
 								// now make sure the king isn't passing over any intermediate squares that are under attack
 								for (int8_t curr_col = src_col + dir_left_right; curr_col != rook_col; curr_col += dir_left_right)
 								{
-									if (is_threatening(get_opposite_side(curr_turn), src_row, curr_col))
+									if (is_threatening(Chess_Piece::get_opposite_side(curr_turn), src_row, curr_col))
 									{
 										return false;
 									}
@@ -1737,7 +1719,7 @@ private:
 	void flip_curr_turn()
 	{
 		assert(get_curr_turn() != Chess_Side::EMPTY);
-		set_curr_turn(get_opposite_side(get_curr_turn()));
+		set_curr_turn(Chess_Piece::get_opposite_side(get_curr_turn()));
 	}
 	/****************************************************************************
 	* clear_player_score
@@ -2199,7 +2181,7 @@ private:
 	* Returns :
 	* - none
 	****************************************************************************/
-	void draw_ScoreBoard() const
+	void draw_scoreboard() const
 	{
 		printf("%s: %hhu\n", get_player_name(Chess_Side::White).c_str(), get_player_score(Chess_Side::White));
 		printf("%s: %hhu\n", get_player_name(Chess_Side::Black).c_str(), get_player_score(Chess_Side::Black));
@@ -2385,9 +2367,9 @@ private:
 	* Returns :
 	* - none
 	****************************************************************************/
-	void draw_Board(bool draw_labels) const
+	void draw_board(bool draw_labels) const
 	{
-		draw_ScoreBoard();
+		draw_scoreboard();
 
 		for (uint8_t row = 1; row <= num_rows; row++)
 		{
