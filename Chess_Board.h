@@ -55,7 +55,18 @@ public:
 	const uint8_t bishop_pts = 3;
 	const uint8_t queen_pts = 9;
 
-	// Default constructor, sets board up in the normal starting configuration
+	/****************************************************************************
+	* Chess_Board
+	*
+	* - Chess_Board class's default constructor, sets board up in the normal 
+	* starting configuration
+	*
+	* Parameters :
+	* - none
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
 	Chess_Board()
 	{
 		// Setting up the board from the top (black side) down...
@@ -110,11 +121,22 @@ public:
 		set_curr_turn(Chess_Side::White);// white starts by default
 		add_game_state_hist();
 	}
-	void test_draw(bool draw_labels)
-	{
-		draw_Board(draw_labels);
-	}
-	// Parametrized constuctor, takes in a FEN string to set up the board in a specified state
+	/****************************************************************************
+	* Chess_Board
+	* 
+	* TO BE IMPLEMENTED
+	*
+	* - Parametrized constructor for the Chess_Board class, sets the game up in 
+	* a specified state according to the inputted FEN string
+	*
+	* Parameters :
+	* - FEN_string : a string containing the chess board's state encoded in 
+	* Forsyth–Edwards Notation 
+	*	- (https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation)
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
 	Chess_Board(std::string FEN_string)
 	{
 		// to be implemented...
@@ -135,11 +157,54 @@ public:
 		// with the now initialized board...
 		// calculate point values for each player based off of what isn't there for the other player
 	}
-	std::string get_player_name(Chess_Side player)
+	/****************************************************************************
+	* test_draw
+	*
+	* - Public wrapper function for the private draw_Board function, to ease
+	* testing
+	*
+	* Parameters :
+	* - draw_labels : indicates whether to print labels at the start of each row
+	* (1-8) and column (A-H)
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
+	void test_draw(bool draw_labels) const
+	{
+		draw_Board(draw_labels);
+	}
+	/****************************************************************************
+	* get_player_name
+	*
+	* - Returns the private data member p1_name or p2_name by value
+	*
+	* Parameters :
+	* - player : specifies whether which name to return 
+	*	- p1_name (Chess_Side::White) 
+	*	- p2_name (Chess_Side::Black)
+	*
+	* Returns :
+	* - std::string : a copy of the specified player's name
+	****************************************************************************/
+	std::string get_player_name(Chess_Side player) const
 	{
 		assert(player != Chess_Side::EMPTY);
 		return player == Chess_Side::White ? p1_name : p2_name;
 	}
+	/****************************************************************************
+	* set_player_name
+	*
+	* - Returns the private data member p1_name or p2_name by value
+	*
+	* Parameters :
+	* - player : specifies whether which name to return
+	*	- p1_name (Chess_Side::White)
+	*	- p2_name (Chess_Side::Black)
+	*
+	* Returns :
+	* - std::string : a copy of the specified player's name
+	****************************************************************************/
 	void set_player_name(Chess_Side player, std::string name)
 	{
 		assert(player != Chess_Side::EMPTY);
@@ -152,6 +217,18 @@ public:
 			p2_name = name;
 		}
 	}
+	/****************************************************************************
+	* play_game
+	*
+	* - Main driver function to play a game of chess once after setup has been 
+	* completed
+	*
+	* Parameters :
+	* - none 
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
 	void play_game()
 	{
 		uint8_t src_row, src_col, dest_row, dest_col, capt_row, capt_col;
@@ -297,6 +374,19 @@ public:
 			//system("cls"); // not sure if we'll want this for debugging, stylistically later tho 
 		}
 	}
+	/****************************************************************************
+	* get_piece_val
+	*
+	* - Returns the point value that would be rewarded for capturing a specified 
+	* chess piece type
+	*
+	* Parameters :
+	* - in_piece : the type of piece to return the point value for
+	*
+	* Returns :
+	* - uint8_t : the number of points awarded for capturing a chess piece of 
+	* type in_piece
+	****************************************************************************/
 	uint8_t get_piece_val(Chess_Piece_Type in_piece) const
 	{
 		switch (in_piece)
@@ -321,13 +411,40 @@ public:
 			break;
 		}
 	}
+	/****************************************************************************
+	* get_num_moves
+	* 
+	* TO BE REWORKED
+	*
+	* - Returns the point value that would be rewarded for capturing a specified
+	* chess piece type
+	*
+	* Parameters :
+	* - none
+	*
+	* Returns :
+	* - uint8_t : the number of moves completed so far in the game
+	****************************************************************************/
 	uint8_t get_num_moves()
 	{
 		// this needs to get changed
 		// casting size_t down to uint8_t shouldn't matter as "The longest possible chess game is 8848.5 moves long" (https://wismuth.com/chess/longest-game.html#:~:text=Abstract,34082%20according%20to%20a%20calculation.)
 		return (uint8_t)game_hist.size() - (uint8_t)1; // minus 1 as the board's initial state is the first entry in that vector
 	}
-	// simply returns the board_square class instance at the specified location
+	/****************************************************************************
+	* get_board_square_info
+	*
+	* - Returns the a copy of the instance of the Board_Square class held at the 
+	* specified row, column location on the board
+	*
+	* Parameters :
+	* - row : the row that the board square is in
+	* _ col : the column that the board square is in
+	*
+	* Returns :
+	* - Board_Square : a copy of the Board_Square class instance at the specified 
+	* location
+	****************************************************************************/
 	Board_Square get_board_square_info(uint8_t row, uint8_t col) const
 	{
 		assert(row >= 1 && row <= 8);
@@ -335,23 +452,70 @@ public:
 
 		return board[row_and_col_to_index(row, col)];
 	}
+	/****************************************************************************
+	* get_curr_turn
+	*
+	* - Returns the the private data member curr_turn, which holds which player's 
+	* turn it is in the game currently
+	*
+	* Parameters :
+	* - none
+	*
+	* Returns :
+	* - Chess_Side : the player who is currently eligible to make a move
+	****************************************************************************/
 	Chess_Side get_curr_turn() const
 	{
 		return curr_turn;
 	}
+	/****************************************************************************
+	* get_curr_turn
+	*
+	* - Returns the the private data member white_score or black_score, which holds 
+	* the specified player's score in the current chess game thus far
+	*
+	* Parameters :
+	* - player : specifies which player's score to fetch
+	*
+	* Returns :
+	* - uint8_t : the specified player's score in the current chess game thus far
+	****************************************************************************/
 	uint8_t get_player_score(Chess_Side player) const
 	{
 		assert(player != Chess_Side::EMPTY);
 		return player == Chess_Side::White ? white_score : black_score;
 	}
-	bool get_player_check(Chess_Side player)
+	/****************************************************************************
+	* get_player_check
+	*
+	* - Returns the private data member white_check or black_check, which holds
+	* the most recently updated indication of whether the specified player is in check
+	*
+	* Parameters :
+	* - player : specifies which player's check status to fetch
+	*
+	* Returns :
+	* - bool : true if the specified player is in check, false otherwise
+	****************************************************************************/
+	bool get_player_check(Chess_Side player) const
 	{
 		assert(player != Chess_Side::EMPTY);
 		return player == Chess_Side::White ? white_check : black_check;
 	}
-	// returns a copy of a single entry of the game_hist vector
-	// if an invalid index is passed in, an empty board is passed back
-		// unless the vector is empty, in which case an assert is triggered
+	/****************************************************************************
+	* get_past_game_state
+	*
+	* - Returns an entry of the game_hist array, which holds a past board state
+	* - If an invalid index is passed in, an empty board is passed back
+	*
+	* Parameters :
+	* - num_moves_back : specifies how many moves back from the current move to 
+	* fetch the state from
+	*
+	* Returns :
+	* - std::array<Board_Square, 64> : the chess board at the specified point in 
+	* the game
+	****************************************************************************/
 	std::array<Board_Square, 64> get_past_game_state(uint8_t num_moves_back)
 	{
 		std::array<Board_Square, 64> prev_game_state;
@@ -374,15 +538,37 @@ public:
 		
 		return game_hist[game_hist.size() - num_moves_back]; // otherwise return the desired state
 	}
+	/****************************************************************************
+	* get_opposite_side
+	*
+	* - Returns the opposite side of the one passed in
+	*
+	* Parameters :
+	* - curr_side : the reference side, of which we want the opposite of
+	*
+	* Returns :
+	* - Chess_Side : the opposite side of curr_side
+	*	- Chess_Side::Black if Chess_Side::White is passed in
+	*	- Chess_Side::White if Chess_Side::Black is passed in
+	****************************************************************************/
 	static Chess_Side get_opposite_side(Chess_Side curr_side)
 	{
 		assert(curr_side != Chess_Side::EMPTY);
 		return curr_side == Chess_Side::White ? Chess_Side::Black : Chess_Side::White;
 	}
-	// iterate through all of the other side's pieces
-		// attempt to make a move from that piece to the king
-			// if it's legal, then the king is in check and we return true
-			// otherwise, just return false
+	/****************************************************************************
+	* is_in_check
+	*
+	* - Returns whether the specified side is currently in check
+	* - Begings by finding the specified player's king, and then checking if any 
+	* pieces from the opposite side can legally attack it
+	*
+	* Parameters :
+	* - player : the side of interest (in regards to its check status)
+	*
+	* Returns :
+	* - bool : true if the specified player is in check, false otherwise
+	****************************************************************************/
 	bool is_in_check(Chess_Side player)
 	{
 		assert(player != Chess_Side::EMPTY);
@@ -409,19 +595,40 @@ public:
 
 		return is_threatening(get_opposite_side(player), king_row, king_col);
 	}
-	// function called when a user attempts to input a move
-	// completes some basic checks, including seeing whether or not the move places the player in check (aka is illegal)
-	// after that, the work is handed off to simple_move_check(), which simply tells whether or not a piece could be moved from the src square to the dest square
-	// the capt_row var is used to indicate to the caller when a piece is captured that is in a different location than the dest square (only happens with an "en-passant" move)
-		// as the name suggests, in such cases the value it points to is the captured piece's row
-		// if the locations aren't different, the value is set to 0
-	// the capt_col var is used to indicate to the caller when a piece is captured that is in a different location than the dest square (only happens with an "en-passant" move)
-	// // as the name suggests, in such cases the value it points to is the captured piece's column
-		// if the locations aren't different, the value is set to 0
-	// the castling_out flag is used to indicate to the caller whether a castling maneuver was sucessfully initiated
-	// the prom_out flag is used to indicate to the caller whether a pawn promotion is in order
-	// the castling_in flag is used to indicate to the function whether the second "leg" of a castling maneuver is required
-	bool check_move(uint8_t src_row, uint8_t src_col, uint8_t dest_row, uint8_t dest_col, uint8_t* capt_row, uint8_t* capt_col, bool* castling_out, bool* prom_out, bool castling_in = false)
+	/****************************************************************************
+	* check_move
+	*
+	* - Takes in a (typically user-supplied) move and checks whether it is 
+	* permissible in the current game state
+	* - Begins with some simple checks before calling simple_move_check to 
+	* make the final checks on the move
+	*
+	* Parameters :
+	* - src_row : the source row of the piece being moved
+	* - src_col : the source column of the piece being moved
+	* - dest_row : the destination row of the piece being moved
+	* - dest_col : the destination column of the piece being moved
+	* - capt_row : used to indicate to the caller when a piece is captured that is 
+	* in a different location than the dest square 
+	*	- its value is 0 if the destination and capture locations are the same
+	*	- if they are different, it holds the row of the captured piece
+	*	- (only happens with an "en-passant" move)
+	* - capt_col : used to indicate to the caller when a piece is captured that is 
+	* in a different location than the dest square 
+	*	- its value is 0 if the destination and capture locations are the same
+	*	- if they are different, it holds the column of the captured piece
+	*	- (only happens with an "en-passant" move)
+	* - castling_out : used to indicate to the caller whether a castling maneuver was 
+	* sucessfully initiated (the king was moved two squares towards a rook)
+	* - prom_out : used to indicate to the caller whether a pawn promotion is in order
+	* - castling_in :  used to indicate to the function whether the second "leg" 
+	* of a castling maneuver is required (king has been moved, now time for the rook)
+	* 
+	* Returns :
+	* - bool : true if the given move is legal, false otherwise
+	****************************************************************************/
+	bool check_move(uint8_t src_row, uint8_t src_col, uint8_t dest_row, uint8_t dest_col, 
+		uint8_t* capt_row, uint8_t* capt_col, bool* castling_out, bool* prom_out, bool castling_in = false)
 	{
 		assert(capt_row != NULL);
 		assert(capt_col != NULL);
@@ -859,15 +1066,55 @@ private:
 		" |__|  |__| ",
 		"            "
 	};
-	// creates an instance of the Board_Square class based off of the input parameters and places it in the specified square in the board array
-	void set_board_square(Chess_Side in_board_color, Chess_Side in_piece_color, Chess_Piece_Type in_piece_type, bool prev_move, uint8_t row, uint8_t col)
+	/****************************************************************************
+	* set_board_square
+	*
+	* - creates an instance of the Board_Square class based off of the input 
+	* parameters and places it in the specified square in the board array
+	*
+	* Parameters :
+	* - in_board_color : the color of the square being created/placed
+	* - in_piece_color : the color of the piece being placed within the square
+	*	- can be Chess_Side::EMPTY if there is no piece
+	* - in_piece_type : the type of the piece being placed within the square
+	*	- can be Chess_Side::EMPTY if there is no piece
+	* - prev_move : indicates whether the piece being placed within the square has
+	* been moved from its starting location yet
+	*	- value doesn't matter if there isn't a piece
+	* - row : the row where the square is to be placed within the board array
+	* - col : the column where the square is to be placed within the board array
+	* 
+	* Returns :
+	* - none
+	****************************************************************************/
+	void set_board_square(Chess_Side in_board_color, Chess_Side in_piece_color, 
+		Chess_Piece_Type in_piece_type, bool prev_move, uint8_t row, uint8_t col)
 	{
 		// should we call a destructor here for the previous instance of the Board_Square?-> is that needed since we're using smart pointers?
 		board[row_and_col_to_index(row, col)] = Board_Square(in_board_color, in_piece_color, in_piece_type, prev_move);
 	}
-	// moves a piece from the src square to the destination square
-	// if the src square is empty, an assert is triggered
-	// if the destination square has a piece in it, it will be overwritten
+	/****************************************************************************
+	* move_piece
+	*
+	* - moves a piece from the source square to the destination square
+	* - if the source square is empty, an assert is triggered
+	* - if the destination square has a piece in it, it will be overwritten
+	*
+	* Parameters :
+	* - real_move : indicates whether this move should alter the value of the piece's
+	* has_moved data member
+	*	- actual moves performed by players (real moves) change this value to true 
+		if it was previously set to false
+		- virtual moves performed by the classes functions to complete various tasks 
+		do not alter the has_moved data member of the piece
+	* - src_row : the source row of the piece being moved
+	* - src_col : the source column of the piece being moved
+	* - dest_row : the destination row of the piece being moved
+	* - dest_col : the destination column of the piece being moved
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
 	void move_piece(bool real_move, uint8_t src_row, uint8_t src_col, uint8_t dest_row, uint8_t dest_col)
 	{
 		Board_Square src_square = get_board_square_info(src_row, src_col);
@@ -881,17 +1128,60 @@ private:
 		// then set the source square to be empty
 		set_board_square(black_white_helper(src_row, src_col), Chess_Side::EMPTY, Chess_Piece_Type::EMPTY, false, src_row, src_col);
 	}
-	// creates a piece and places it in the specified square
-	void insert_piece(uint8_t dest_row, uint8_t dest_col, Chess_Side in_piece_color, Chess_Piece_Type in_piece_type, bool prev_move)
+	/****************************************************************************
+	* insert_piece
+	*
+	* - creates a piece and places it in the specified square on the board
+	* - acts as a wrapper for the set_board_square function
+	*
+	* Parameters :
+	* - row : the destination row of the piece being moved
+	* - col : the destination column of the piece being moved
+	* - in_piece_color : the color of the piece being placed within the square
+	* - in_piece_type : the type of the piece being placed within the square
+	* - prev_move : indicates whether the piece being placed within the square has
+	* been moved from its starting location yet
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
+	void insert_piece(uint8_t row, uint8_t col, Chess_Side in_piece_color, Chess_Piece_Type in_piece_type, bool prev_move)
 	{
-		set_board_square(black_white_helper(dest_row, dest_col), in_piece_color, in_piece_type, prev_move, dest_row, dest_col);
+		assert(in_piece_color != Chess_Side::EMPTY);
+		assert(in_piece_type != Chess_Piece_Type::EMPTY);
+		set_board_square(black_white_helper(row, col), in_piece_color, in_piece_type, prev_move, row, col);
 	}
-	// removes a piece from the specified square by placing an empty piece in its place
+	/****************************************************************************
+	* clear_piece
+	*
+	* - removes a piece from the specified square by placing an empty piece in 
+	* its place
+	* - acts as a wrapper for the insert_piece function
+	*
+	* Parameters :
+	* - row : the destination row of the piece being moved
+	* - col : the destination column of the piece being moved
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
 	void clear_piece(uint8_t row, uint8_t col)
 	{
 		insert_piece(row, col, Chess_Side::EMPTY, Chess_Piece_Type::EMPTY, false);
 	}
-	// translates the internal row and col index to the actual index in the board array
+	/****************************************************************************
+	* row_and_col_to_index
+	*
+	* - translates the internal row and col index (1-8 x 1-8 labeling) to the 
+	* actual index in the board array
+	*
+	* Parameters :
+	* - row : the destination row of the piece being moved
+	* - col : the destination column of the piece being moved
+	*
+	* Returns :
+	* - uint8_t : the index in the board array for the specified row, col square
+	****************************************************************************/
 	uint8_t row_and_col_to_index(uint8_t row, uint8_t col) const
 	{
 		assert(row >= 1 && row <= 8);
@@ -899,16 +1189,47 @@ private:
 
 		return ((row - 1) * num_cols) + (col - 1);
 	}
-	// gives a signed indication of the correct direction for a pawn to move depending on its side
-		// (in the internal row representation)
+	/****************************************************************************
+	* get_pawn_dir
+	*
+	* - gives a signed indication of the correct direction for a pawn to move 
+	* depending on its side
+	* - matches the change in row number for a given pawn move in the correct 
+	* direction (destination row = source_row + pawn_dir)
+	*
+	* Parameters :
+	* - curr_side : the side of the pawn direction in question
+	*
+	* Returns :
+	* - int8_t : the direction of the correct vertical pawn movement for the 
+	* specified side
+	*	- -1 for white pawns moving "up" the board
+	*	- +1 for black pawns moving "down" the board
+	****************************************************************************/
 	int8_t get_pawn_dir(Chess_Side curr_side)
 	{
 		assert(curr_side != Chess_Side::EMPTY);
 		return curr_side == Chess_Side::White ? white_pawn_dir : black_pawn_dir;
 	}
-	// returns true if 'attacking_side' has a piece that could attack the given square
+	/****************************************************************************
+	* is_threatening
+	*
+	* - indicates whether the specified side is threatening (could legally attack) 
+	* the specified target square
+	*
+	* Parameters :
+	* - attacking_side : the side potentially threatening the target square
+	* - target_row : the row of the target square 
+	* - target_col : the column of the target square
+	*
+	* Returns :
+	* - bool : true if the attacking side is threatening the target square, false
+	* otherwise
+	****************************************************************************/
 	bool is_threatening(Chess_Side attacking_side, uint8_t target_row, uint8_t target_col)
 	{
+		assert(attacking_side != Chess_Side::EMPTY);
+
 		bool dumby_castle_flag;
 		bool dumby_prom_flag;
 		uint8_t dumby_capt_row;
@@ -928,10 +1249,43 @@ private:
 		}
 		return false;
 	}
-	// just checks if the piece at src_row, src_col COULD move to dest_row, dest_col
-	// used to see if a piece is threatening the king
-	bool simple_move_check(Chess_Side curr_turn, uint8_t src_row, uint8_t src_col, uint8_t dest_row, uint8_t dest_col, uint8_t* capt_row, uint8_t* capt_col, bool* castling_out, bool* prom_out, bool castling_in = false)
+	/****************************************************************************
+	* simple_move_check
+	*
+	* - verifies that the specified move can be physically performed by the piece 
+	* in the source square
+	* - performs a lot of the work for the check_move function
+	*
+	* Parameters :
+	* - curr_turn : the side executing the move in question
+	* - src_row : the source row of the piece being moved
+	* - src_col : the source column of the piece being moved
+	* - dest_row : the destination row of the piece being moved
+	* - dest_col : the destination column of the piece being moved
+	* - capt_row : used to indicate to the caller when a piece is captured that is 
+	* in a different location than the dest square 
+	*	- its value is 0 if the destination and capture locations are the same
+	*	- if they are different, it holds the row of the captured piece
+	*	- (only happens with an "en-passant" move)
+	* - capt_col : used to indicate to the caller when a piece is captured that is 
+	* in a different location than the dest square 
+	*	- its value is 0 if the destination and capture locations are the same
+	*	- if they are different, it holds the column of the captured piece
+	*	- (only happens with an "en-passant" move)
+	* - castling_out : used to indicate to the caller whether a castling maneuver was 
+	* sucessfully initiated (the king was moved two squares towards a rook)
+	* - prom_out : used to indicate to the caller whether a pawn promotion is in order
+	* - castling_in :  used to indicate to the function whether the second "leg" 
+	* of a castling maneuver is required (king has been moved, now time for the rook)
+	*
+	* Returns :
+	* - bool : true if the given move is legal, false otherwise
+	****************************************************************************/
+	bool simple_move_check(Chess_Side curr_turn, uint8_t src_row, uint8_t src_col, uint8_t dest_row, uint8_t dest_col, 
+		uint8_t* capt_row, uint8_t* capt_col, bool* castling_out, bool* prom_out, bool castling_in = false)
 	{
+		assert(curr_turn != Chess_Side::EMPTY);
+
 		// calculate some useful values first...
 		int8_t up_down = dest_row - src_row; // positive means moving down, negative means moving up (unfortunate internal row order convention I don't feel like changing now)
 		int8_t left_right = dest_col - src_col; // positive means moving right, negative means moving left
@@ -1308,8 +1662,35 @@ private:
 		}
 
 	}
-	// once a move is deemed legal, this actually completes the move on the board, and adds the necessary points to the appropriate player's score if a piece is captured
-	void enact_move(Chess_Side player, uint8_t src_row, uint8_t src_col, uint8_t dest_row, uint8_t dest_col, uint8_t capt_row = 0, uint8_t capt_col = 0)
+	/****************************************************************************
+	* enact_move
+	*
+	* - performs a move on the board once it has been deemed legally
+	* - moves the appropriate pieces and adds the necessary points to the 
+	* appropriate player's score if a piece is captured
+	*
+	* Parameters :
+	* - curr_turn : the side executing the move in question
+	* - src_row : the source row of the piece being moved
+	* - src_col : the source column of the piece being moved
+	* - dest_row : the destination row of the piece being moved
+	* - dest_col : the destination column of the piece being moved
+	* - capt_row : used to indicate when a piece is captured that is in a 
+	* different location than the dest square 
+	*	- its value is 0 if the destination and capture locations are the same
+	*	- if they are different, it holds the row of the captured piece
+	*	- (only happens with an "en-passant" move)
+	* - capt_col : used to indicate when a piece is captured that is in a 
+	* different location than the dest square 
+	*	- its value is 0 if the destination and capture locations are the same
+	*	- if they are different, it holds the column of the captured piece
+	*	- (only happens with an "en-passant" move)
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
+	void enact_move(Chess_Side player, uint8_t src_row, uint8_t src_col, 
+		uint8_t dest_row, uint8_t dest_col, uint8_t capt_row = 0, uint8_t capt_col = 0)
 	{
 		// if a piece is being captured, we add it's value to the player's score
 		// going to assume all the necessary checking was done before hand and that the piece is on the opposite side
@@ -1325,16 +1706,51 @@ private:
 
 		move_piece(true, src_row, src_col, dest_row, dest_col);
 	}
+	/****************************************************************************
+	* set_curr_turn
+	*
+	* - sets the value of the private data member curr_turn, used to indicate 
+	* which player's move it is in the current game
+	*
+	* Parameters :
+	* - curr_turn : the side to set the curr_turn value to
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
 	void set_curr_turn(Chess_Side turn)
 	{
 		curr_turn = turn;
 	}
+	/****************************************************************************
+	* flip_curr_turn
+	*
+	* - sets the value of the private data member curr_turn to the opposite side
+	* - used as a wrapper for the set_curr_turn function
+	*
+	* Parameters :
+	* - none
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
 	void flip_curr_turn()
 	{
 		assert(get_curr_turn() != Chess_Side::EMPTY);
 		set_curr_turn(get_opposite_side(get_curr_turn()));
 	}
-	// wipes out the specified player's score total
+	/****************************************************************************
+	* clear_player_score
+	*
+	* - sets the private data member white_score or black_score to 0, depending on 
+	* the input
+	*
+	* Parameters :
+	* - player : which player's score to set to 0
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
 	void clear_player_score(Chess_Side player)
 	{
 		assert(player != Chess_Side::EMPTY);
@@ -1349,7 +1765,19 @@ private:
 			return;
 		}
 	}
-	// adds the specified amount to the specified player's score
+	/****************************************************************************
+	* clear_player_score
+	*
+	* - modifies the private data member white_score or black_score by a specified 
+	* amount
+	*
+	* Parameters :
+	* - player : which player's score to modify
+	* - delta_score : the amount to change the specified player's score by
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
 	void modify_player_score(Chess_Side player, uint8_t delta_score)
 	{
 		assert(player != Chess_Side::EMPTY);
@@ -1364,6 +1792,18 @@ private:
 			return;
 		}
 	}
+	/****************************************************************************
+	* set_player_check
+	*
+	* - sets the private data member white_check or black_check
+	*
+	* Parameters :
+	* - player : which player's check status to modify
+	* - check_val : the value to set the check status to
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
 	void set_player_check(Chess_Side player, bool check_val)
 	{
 		assert(player != Chess_Side::EMPTY);
@@ -1376,18 +1816,49 @@ private:
 			black_check = check_val;
 		}
 	}
-	// sees if a player is in check, and updates their check variable accordingly
+	/****************************************************************************
+	* update_player_check
+	*
+	* - sees if a player is in check, and updates their check variable accordingly
+	*
+	* Parameters :
+	* - player : which player's check status to update
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
 	void update_player_check(Chess_Side player)
 	{
 		assert(player != Chess_Side::EMPTY);
 		set_player_check(player, is_in_check(player));
 	}
-	// adds the current board state to the end of the game_hist vector
+	/****************************************************************************
+	* update_player_check
+	*
+	* - adds the current board state to the end of the game_hist vector
+	*
+	* Parameters :
+	* - none
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
 	void add_game_state_hist()
 	{
 		game_hist.emplace_back(board);
 	}
-	// instead of a switch we could just go off of the ASCII char number but that seems a bit obfuscated
+	/****************************************************************************
+	* lettered_col_translation
+	*
+	* - translate the external lettered column labels of the chess board (A-H) to
+	* the internal (1-8) labeling scheme
+	*
+	* Parameters :
+	* - col_in : the external column label to be translated
+	*
+	* Returns :
+	* - uint8_t : the translated column label
+	****************************************************************************/
 	static uint8_t lettered_col_translation(char col_in)
 	{
 		col_in = toupper(col_in);
@@ -1422,16 +1893,41 @@ private:
 			break;
 		}
 	}
-	// not going to do any error checking here, we'll let the col/ row checkers take care of bad input
-	static uint8_t char_to_num(char input)
+	/****************************************************************************
+	* char_to_num
+	*
+	* - takes in a character and if that character represents a number, translate 
+	* it to said number
+	* - if the character doesn't represent a number, just return the character's 
+	* value back out
+	*
+	* Parameters :
+	* - char_in : the character inputted (hopefully a number)
+	*
+	* Returns :
+	* - uint8_t : the translated character in the form of a number
+	****************************************************************************/
+	static uint8_t char_to_num(char char_in)
 	{
-		if (std::isdigit(input)) // if it's a number, translate it
+		if (std::isdigit(char_in)) // if it's a number, translate it
 		{
-			return input - '0';
+			return char_in - '0';
 		}
-		return input; // otherwise, garbage in->garbage out
+		return char_in; // otherwise, garbage in->garbage out
 	}
-	// translation that's necessary because I'm an idiot
+	/****************************************************************************
+	* external_to_internal_row
+	*
+	* - translates the typical chess board's labeling scheme and translates it to 
+	* the class's internal labeling scheme
+	*	- unfortunately these schemes run in opposite directions
+	*
+	* Parameters :
+	* - row : the external row label to be translated
+	*
+	* Returns :
+	* - uint8_t : the translated row label
+	****************************************************************************/
 	static uint8_t external_to_internal_row(uint8_t row)
 	{
 		switch (row) {
@@ -1464,11 +1960,36 @@ private:
 			break;
 		}
 	}
-	// redundant, but the name helps the code make more sense
+	/****************************************************************************
+	* internal_to_external_row
+	*
+	* - translates the class's internal row labeling scheme to the typical chess 
+	* board's labeling scheme
+	*	- unfortunately these schemes run in opposite directions
+	* - redundant, but the name helps the code make more sense
+	*
+	* Parameters :
+	* - row : the internal row label to be translated
+	*
+	* Returns :
+	* - uint8_t : the translated row label
+	****************************************************************************/
 	static uint8_t internal_to_external_row(uint8_t row)
 	{
 		return external_to_internal_row(row); 
 	}
+	/****************************************************************************
+	* valid_row
+	*
+	* - checks if the inputted number is a valid row in the class's internal 
+	* representation
+	*
+	* Parameters :
+	* - in_row : the row label to be checked
+	*
+	* Returns :
+	* - bool : true if the row is valid, false otherwise
+	****************************************************************************/
 	bool valid_row(uint8_t in_row)
 	{
 		if (in_row >= 1 && in_row <= num_rows)
@@ -1477,6 +1998,18 @@ private:
 		}
 		return false;
 	}
+	/****************************************************************************
+	* valid_col
+	*
+	* - checks if the inputted number is a valid column in the class's internal
+	* representation
+	*
+	* Parameters :
+	* - in_col : the row label to be checked
+	*
+	* Returns :
+	* - bool : true if the col is valid, false otherwise
+	****************************************************************************/
 	bool valid_col(uint8_t in_col)
 	{
 		if (in_col >= 1 && in_col <= num_cols)
@@ -1485,13 +2018,36 @@ private:
 		}
 		return false;
 	}
-	// returns the row (internal representation) that the given player can castle in
+	/****************************************************************************
+	* get_castling_row
+	*
+	* - returns the row (internal representation) that the given player can 
+	* perform a castling manuever within
+	*
+	* Parameters :
+	* - side : the side to be castling
+	*
+	* Returns :
+	* - uint8_t : the row to castle in
+	****************************************************************************/
 	static uint8_t get_castling_row(Chess_Side side)
 	{
 		assert(side != Chess_Side::EMPTY);
 		return side == Chess_Side::White ? 8 : 1;
 	}
-	// returns whether the specified square should be black or white
+	/****************************************************************************
+	* black_white_helper
+	*
+	* - returns whether the specified square should be black or white
+	*
+	* Parameters :
+	* - row : the row of the square in question
+	* - col : the column of the square in question
+	*
+	* Returns :
+	* - Chess_Side : the color (Chess_Side::White or Chess_Side::Black) of the 
+	* square in question
+	****************************************************************************/
 	static Chess_Side black_white_helper(uint8_t row, uint8_t col)
 	{
 		assert(row >= 1 && row <= 8);
@@ -1521,18 +2077,54 @@ private:
 		// if somehow none of those cases hit we'll return this as garbage
 		return Chess_Side::EMPTY;
 	}
-	// just a get function for the number of printf lines we use when "drawing" things
+	/****************************************************************************
+	* get_num_layers
+	*
+	* - returns the number of layers (lines) that our drawing functions utilize 
+	* for a given big character/ chess row
+	*
+	* Parameters :
+	* - none
+	*
+	* Returns :
+	* - uint8_t : the number of layers
+	****************************************************************************/
 	uint8_t get_num_layers() const
 	{
 		return num_layers;
 	}
-	// just a get function for the number of width of our big chars when "drawing" things
+	/****************************************************************************
+	* get_draw_width
+	*
+	* - returns the draw width (number of characters) that our drawing functions 
+	* utilize for a given big character/ chess row
+	*
+	* Parameters :
+	* - none
+	*
+	* Returns :
+	* - uint8_t : the drawing width
+	****************************************************************************/
 	uint8_t get_draw_width() const
 	{
 		return draw_width;
 	}
-	// for drawing functions
-	std::string get_piece_layer(Chess_Piece_Type piece, Chess_Side side, uint8_t layer)
+	/****************************************************************************
+	* get_piece_layer
+	*
+	* - returns the specified layer of big character representation of the 
+	* specified chess piece 
+	* - for our drawing functions
+	*
+	* Parameters :
+	* - piece : the chess piece 
+	* - side : the chess piece's side
+	* - layer : the layer of the piece's big character representation
+	*
+	* Returns :
+	* - std::string : the requested big character layer
+	****************************************************************************/
+	std::string get_piece_layer(Chess_Piece_Type piece, Chess_Side side, uint8_t layer) const
 	{
 		assert(layer >= 0 && layer <= 8);
 
@@ -1593,14 +2185,40 @@ private:
 			return empty_piece[layer];
 		}
 	}
-	// draws a scoreboard, purely for use within the draw_Board() function
-	// can be improved later once/ if I feel like bringing in the big chars project
-	void draw_ScoreBoard()
+	/****************************************************************************
+	* draw_ScoreBoard
+	* 
+	* TO BE REWORKED
+	*
+	* - draws the "scoreboard" for the current chess game, displaying the scores
+	* for each player
+	*
+	* Parameters :
+	* - none
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
+	void draw_ScoreBoard() const
 	{
 		printf("%s: %hhu\n", get_player_name(Chess_Side::White).c_str(), get_player_score(Chess_Side::White));
 		printf("%s: %hhu\n", get_player_name(Chess_Side::Black).c_str(), get_player_score(Chess_Side::Black));
 	}
-	std::string get_col_label_layer(uint8_t col, uint8_t layer)
+	/****************************************************************************
+	* get_col_label_layer
+	*
+	* - returns the specified layer of big character representation of the
+	* specified column label
+	* - for our drawing functions
+	*
+	* Parameters :
+	* - col : the column we want a label for
+	* - layer : the layer of the column label's big character representation
+	*
+	* Returns :
+	* - std::string : the requested big character layer
+	****************************************************************************/
+	std::string get_col_label_layer(uint8_t col, uint8_t layer) const
 	{
 		assert(col >= 1 && col <= 8);
 		assert(layer >= 0 && layer < get_num_layers());
@@ -1635,8 +2253,18 @@ private:
 			break;
 		}
 	}
-	// draws the A-H column labels lined up with the board's squares
-	void draw_column_labels(bool draw_labels)
+	/****************************************************************************
+	* draw_column_labels
+	*
+	* - draws the A-H column labels lined up with the board's squares
+	*
+	* Parameters :
+	* - draw_labels : indicates whether to account for space taken up by the row labels
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
+	void draw_column_labels(bool draw_labels) const
 	{
 		for (uint8_t layer = 0; layer < get_num_layers(); layer++) // for each layer...
 		{
@@ -1651,7 +2279,21 @@ private:
 			printf("\n");
 		}
 	}
-	std::string get_row_label_layer(uint8_t row, uint8_t layer)
+	/****************************************************************************
+	* get_row_label_layer
+	*
+	* - returns the specified layer of big character representation of the
+	* specified row label
+	* - for our drawing functions
+	*
+	* Parameters :
+	* - row : the row we want a label for
+	* - layer : the layer of the row label's big character representation
+	*
+	* Returns :
+	* - std::string : the requested big character layer
+	****************************************************************************/
+	std::string get_row_label_layer(uint8_t row, uint8_t layer) const
 	{
 		assert(row >= 1 && row <= 8);
 		assert(layer >= 0 && layer < get_num_layers());
@@ -1686,9 +2328,20 @@ private:
 			break;
 		}
 	}
-	// draws a specified row of the board
-	// 'draw_labels' indicates whether to print the labels (1-8) at the beginning of each row
-	void draw_Row(uint8_t row, bool draw_labels)
+	/****************************************************************************
+	* draw_Row
+	*
+	* - draws a specified row of the board
+	*
+	* Parameters :
+	* - row : the row we want to draw
+	* - draw_labels : indicates whether to print the labels (1-8) at the beginning 
+	* of each row
+	*
+	* Returns :
+	* - std::string : the requested big character layer
+	****************************************************************************/
+	void draw_Row(uint8_t row, bool draw_labels) const
 	{
 		Chess_Piece_Type temp_piece;
 		Chess_Side temp_side;
@@ -1720,9 +2373,19 @@ private:
 			printf("\n");
 		}
 	}
-	// draws the chess board in its current state
-	// draw_labels indicates whether or not to print row and column labels
-	void draw_Board(bool draw_labels)
+	/****************************************************************************
+	* draw_Board
+	*
+	* - draws the current state of the chess board to the console
+	*
+	* Parameters :
+	* - draw_labels : indicates whether to print the row and column lables 
+	*	- (1-8 and A-H, respectively)
+	*
+	* Returns :
+	* - none
+	****************************************************************************/
+	void draw_Board(bool draw_labels) const
 	{
 		draw_ScoreBoard();
 
